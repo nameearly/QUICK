@@ -585,7 +585,7 @@ contains
               IDIISfinal=Idiisfinal-1
               do I=1,IDIISfinal+1
                  do J=1,IDIISfinal+1
-                    B(I,J)=BSAVE(I+IDIIS_Error_Start,J+IDIIS_Error_Start)
+                    B(I,J)=BSAVE(I+IDIIS_Error_Start-1,J+IDIIS_Error_Start-1)
                  enddo
               enddo
               IDIIS_Error_Start = IDIIS_Error_Start + 1

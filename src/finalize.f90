@@ -78,6 +78,9 @@ subroutine finalize(io,ierr,option)
     use allmod
     use quick_exception_module
     use quick_molden_module, only: finalizeExport, quick_molden
+#ifdef MPIV
+    use mpi
+#endif
     implicit none
     integer io      !output final info and close this unit
     integer option  ! 0 if called from Quick and 1 if called from the API
@@ -100,6 +103,12 @@ subroutine finalize(io,ierr,option)
              call PrtDate(io,'Error Termination. Task Failed on:',ierr)
         endif
     endif
+
+#ifdef MPIV
+    if (bMPI) then
+        call MPI_BCAST(ierr,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
+    endif
+#endif
 
     if (ierr == 0) call timer_output(io)
        

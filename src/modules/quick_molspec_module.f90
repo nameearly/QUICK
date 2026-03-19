@@ -172,16 +172,14 @@ contains
          enddo
       enddo
 
-      if (self%nextatom.gt.0) then
-         if (.not. allocated(self%extxyz)) allocate(self%extxyz(3,self%nextatom))
-         if (.not. allocated(self%extchg)) allocate(self%extchg(self%nextatom))
-         do i=1,self%nextatom
-            do j=1,3
-               self%extxyz(j,i)=0d0
-            enddo
-            self%extchg(i)=0d0
+      if (.not. allocated(self%extxyz)) allocate(self%extxyz(3,self%nextatom))
+      if (.not. allocated(self%extchg)) allocate(self%extchg(self%nextatom))
+      do i=1,self%nextatom
+         do j=1,3
+            self%extxyz(j,i)=0d0
          enddo
-      endif
+         self%extchg(i)=0d0
+      enddo
 
       if (self%nconsatom .gt. 0) then
          if (.not. allocated(self%dlfind_constr)) allocate(self%dlfind_constr(5,self%nconsatom)) 
@@ -217,23 +215,21 @@ contains
      integer, intent(inout) :: ierr
      integer :: current_size
 
-     if(self%nextatom > 0) then
-       if(allocated(self%extchg)) then
-         current_size = size(self%extchg)
-       else
-         current_size = 0
-       endif
-       ! if size changes at all, be safe and reallocate to avoid mismatches in array operations with external codes;
-       ! this can be potentially revisited in the future during optimization efforts
-       if(current_size /= self%nextatom) then
-         deallocate(self%extchg, stat=ierr)
-         deallocate(self%extxyz, stat=ierr)
-         allocate(self%extchg(self%nextatom), stat=ierr)
-         allocate(self%extxyz(3,self%nextatom), stat=ierr)
-       endif
-       self%extchg=0.0d0
-       self%extxyz=0.0d0
+     if(allocated(self%extchg)) then
+       current_size = size(self%extchg)
+     else
+       current_size = 0
      endif
+     ! if size changes at all, be safe and reallocate to avoid mismatches in array operations with external codes;
+     ! this can be potentially revisited in the future during optimization efforts
+     if(current_size /= self%nextatom) then
+       if(allocated(self%extchg)) deallocate(self%extchg, stat=ierr)
+       if(allocated(self%extxyz)) deallocate(self%extxyz, stat=ierr)
+       allocate(self%extchg(self%nextatom), stat=ierr)
+       allocate(self%extxyz(3,self%nextatom), stat=ierr)
+     endif
+     if(allocated(self%extchg)) self%extchg=0.0d0
+     if(allocated(self%extxyz)) self%extxyz=0.0d0
 
      if(self%nextpoint > 0) then
        if(allocated(self%extpointxyz)) then
@@ -247,8 +243,7 @@ contains
          deallocate(self%extpointxyz, stat=ierr)
          allocate(self%extpointxyz(3,self%nextpoint), stat=ierr)
        endif
-       self%extchg=0.0d0
-       self%extpointxyz=0.0d0
+       if(allocated(self%extpointxyz)) self%extpointxyz=0.0d0
      endif
 
    end subroutine reallocate_quick_molspec
@@ -286,7 +281,7 @@ contains
       implicit none
 
       type (quick_molspec_type), intent(inout) :: self
-      integer, intent(inout) :: ierr
+      integer, intent(inout), optional :: ierr
 
       if (allocated(xyz)) deallocate(xyz)
       if (allocated(self%distnbor)) deallocate(self%distnbor)
@@ -295,19 +290,16 @@ contains
       if (allocated(self%dlfind_freezeatm)) deallocate(self%dlfind_freezeatm)
 
       ! if exist external charge
-      if (self%nextatom.gt.0) then
-        if (allocated(self%extxyz)) deallocate(self%extxyz)
-        if (allocated(self%extchg)) deallocate(self%extchg)
-      endif
+      if (allocated(self%extxyz)) deallocate(self%extxyz)
+      if (allocated(self%extchg)) deallocate(self%extchg)
 
-      if (self%nconsatom.gt.0) then
-         if (allocated(self%dlfind_constr)) deallocate(self%dlfind_constr)
-      endif
+      if (allocated(self%AtomDistance)) deallocate(self%AtomDistance)
+
+      if (allocated(self%distnbor)) deallocate(self%distnbor)
+      if (allocated(self%dlfind_constr)) deallocate(self%dlfind_constr)
 
       ! if exist external grid
-      if (self%nextpoint.gt.0) then
-         if (allocated(self%extpointxyz)) deallocate(self%extpointxyz)
-      endif   
+      if (allocated(self%extpointxyz)) deallocate(self%extpointxyz)
 
    end subroutine deallocate_quick_molspec
 
